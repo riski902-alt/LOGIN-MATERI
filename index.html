@@ -327,7 +327,15 @@
               let siswaCocok = false;
               querySnapshot.forEach((doc) => {
                 const data = doc.data();
-                if (data.Nama_Siswa && data.Nama_Siswa.trim().toLowerCase() === namaInput.toLowerCase()) {
+                
+                // MENCETAK DATA KE CONSOLE BROWSER UNTUK DEBUGGING
+                console.log("Data yang ditarik dari database:", data);
+
+                // Mengambil nilai nama, berjaga-jaga jika nama kolomnya Nama_Siswa atau nama_siswa
+                const namaDariDatabase = data.Nama_Siswa || data.nama_siswa || data.nama || "";
+
+                // Kita bandingkan dengan menghapus spasi berlebih (trim) dari kedua sisi agar lebih akurat
+                if (namaDariDatabase.trim().toLowerCase() === namaInput.toLowerCase()) {
                   siswaCocok = true;
                 }
               });
