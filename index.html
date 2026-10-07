@@ -237,14 +237,19 @@
       import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
       import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
+      // =========================================================================
+      // Konfigurasi Database Baru: DATABASEMATERIINFORMATIKA
+      // =========================================================================
       const firebaseConfig = {
-        apiKey: "AIzaSyBxy_aOtOcbDIzCKxxKxzcZgQSi4-YUT6g",
-        authDomain: "informatika-fun.firebaseapp.com",
-        projectId: "informatika-fun",
-        storageBucket: "informatika-fun.firebasestorage.app",
-        messagingSenderId: "869889926091",
-        appId: "1:869889926091:web:7d4d08db90802b8e26cc4e"
+        apiKey: "AIzaSyB7bt1JBOXkh81nYk8sVkuFpSmuJ3kOj94",
+        authDomain: "databasemateriinformatika.firebaseapp.com",
+        projectId: "databasemateriinformatika",
+        storageBucket: "databasemateriinformatika.firebasestorage.app",
+        messagingSenderId: "961327810612",
+        appId: "1:961327810612:web:48e952f20159a5b932e261",
+        measurementId: "G-TDZQZ9L36B"
       };
+      // =========================================================================
 
       const app = initializeApp(firebaseConfig);
       const auth = getAuth(app);
@@ -303,14 +308,15 @@
             showStatus('Memeriksa data siswa...', 'success');
 
             try {
-              const nisnAngka = Number(nisnInput);
-              // Mencari dokumen berdasarkan NISN
-              const q = query(collection(db, "siswa"), where("NISN", "==", nisnAngka));
+              // Mencari dokumen berdasarkan NISN sebagai String (Teks)
+              let q = query(collection(db, "siswa"), where("NISN", "==", nisnInput));
               let querySnapshot = await getDocs(q);
 
+              // Jika kosong, coba cari berdasarkan NISN sebagai Number (Angka)
               if (querySnapshot.empty) {
-                const qString = query(collection(db, "siswa"), where("NISN", "==", nisnInput));
-                querySnapshot = await getDocs(qString);
+                const nisnAngka = Number(nisnInput);
+                q = query(collection(db, "siswa"), where("NISN", "==", nisnAngka));
+                querySnapshot = await getDocs(q);
               }
 
               if (querySnapshot.empty) {
