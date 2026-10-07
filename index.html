@@ -1,0 +1,181 @@
+<!-- JAVASCRIPT LOGIC & FIREBASE -->
+<script type="module">
+  // 1. Import Firebase SDK (Auth & Firestore)
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+  import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+  // 2. Konfigurasi Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyBxy_aOtOcbDIzCKxxKxzcZgQSi4-YUT6g",
+    authDomain: "informatika-fun.firebaseapp.com",
+    projectId: "informatika-fun",
+    storageBucket: "informatika-fun.firebasestorage.app",
+    messagingSenderId: "869889926091",
+    appId: "1:869889926091:web:7d4d08db90802b8e26cc4e"
+  };
+
+  // 3. Inisialisasi Firebase & Services
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // --- ELEMEN DOM ---
+  const roleInputs = document.querySelectorAll('input[name="userRole"]');
+  const siswaSection = document.getElementById('siswaSection');
+  const guruSection = document.getElementById('guruSection');
+  const statusDiv = document.getElementById('statusMessage');
+  const btnLogin = document.getElementById('btnLogin');
+  const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+
+  // --- FUNGSI TAMPILAN PESAN STATUS ---
+  function showStatus(message, type) {
+    if (!statusDiv) return;
+    statusDiv.innerText = message;
+    statusDiv.style.display = 'block';
+    
+    if (type === 'error') {
+      statusDiv.classList.add('status-error');
+      statusDiv.classList.remove('status-success');
+    } else {
+      statusDiv.classList.add('status-success');
+      statusDiv.classList.remove('status-error');
+    }
+  }
+
+  function hideStatus() {
+    if (statusDiv) statusDiv.style.display = 'none';
+  }
+
+  function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  // --- MEKANISME DYNAMIC FORM SWITCHING ---
+  roleInputs.forEach(input => {
+    input.addEventListener('change', (e) => {
+      hideStatus();
+      if (e.target.value === 'siswa') {
+        siswaSection.classList.add('active');
+        guruSection.classList.remove('active');
+      } else {
+        guruSection.classList.add('active');
+        siswaSection.classList.remove('active');
+      }
+    });
+  });
+
+  // --- TOGGLE SEE PASSWORD (GURU) ---
+  if (togglePasswordBtn) {
+    togglePasswordBtn.addEventListener('click', () => {
+      const passInput = document.getElementById('password');
+      const eyeIcon = document.getElementById('eyeIcon');
+      
+      if (passInput.type === 'password') {
+        passInput.type = 'text';
+        eyeIcon.innerHTML = `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>`;
+      } else {
+        passInput.type = 'password';
+        eyeIcon.innerHTML = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>`;
+      }
+    });
+  }
+
+  // --- PENANGANAN SUBMIT FORM ---
+  if (btnLogin) {
+    btnLogin.addEventListener('click', async (event) => {
+      event.preventDefault(); 
+      
+      const selectedRole = document.querySelector('input[name="userRole"]:checked').value;
+
+      if (selectedRole === 'siswa') {
+        // === LOGIKA LOGIN SISWA TERHUBUNG DATABASE ===
+        const namaInput = document.getElementById('nama').value.trim();
+        const nisnInput = document.getElementById('nisn').value.trim();
+
+        if (namaInput === '' || nisnInput === '') {
+          showStatus('Nama dan NISN tidak boleh kosong.', 'error');
+          return;
+        }
+
+        const nisnRegex = /^[0-9]{10}$/;
+        if (!nisnRegex.test(nisnInput)) {
+          showStatus('NISN harus terdiri dari 10 digit angka.', 'error');
+          return;
+        }
+
+        showStatus('Memeriksa data siswa di database...', 'success');
+
+        try {
+          // Mengonversi input ke Tipe Angka/String agar cocok dengan Firestore
+          const nisnAngka = Number(nisnInput);
+
+          // Mencari di koleksi 'siswa' berdasarkan field 'NISN'
+          const q = query(collection(db, "siswa"), where("NISN", "==", nisnAngka));
+          let querySnapshot = await getDocs(q);
+
+          // Jika pencarian angka kosong, coba cari sebagai string
+          if (querySnapshot.empty) {
+            const qString = query(collection(db, "siswa"), where("NISN", "==", nisnInput));
+            querySnapshot = await getDocs(qString);
+          }
+
+          if (querySnapshot.empty) {
+            showStatus('NISN tidak terdaftar di database.', 'error');
+            return;
+          }
+
+          let siswaCocok = false;
+          querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            // Memeriksa pencocokan field 'Nama_Siswa'
+            if (data.Nama_Siswa && data.Nama_Siswa.trim().toLowerCase() === namaInput.toLowerCase()) {
+              siswaCocok = true;
+            }
+          });
+
+          if (siswaCocok) {
+            showStatus('Login Siswa berhasil! Mengalihkan...', 'success');
+            setTimeout(() => {
+              window.location.href = "https://riski902-alt.github.io/TOMBOL-PILIH-KELAS/"; 
+            }, 1000);
+          } else {
+            showStatus('Nama tidak cocok dengan NISN yang terdaftar.', 'error');
+          }
+
+        } catch (error) {
+          console.error("Error Database:", error);
+          showStatus('Terjadi kesalahan saat menghubungkan ke database.', 'error');
+        }
+
+      } else {
+        // === LOGIKA LOGIN GURU (FIREBASE AUTH) ===
+        const emailInput = document.getElementById('email').value.trim();
+        const passwordInput = document.getElementById('password').value;
+
+        if (emailInput === '' || passwordInput === '') {
+          showStatus('Email dan password belum diisi.', 'error');
+          return;
+        }
+
+        if (!isValidEmail(emailInput)) {
+          showStatus('Format email tidak valid.', 'error');
+          return;
+        }
+
+        showStatus('Memeriksa akun Guru...', 'success');
+
+        signInWithEmailAndPassword(auth, emailInput, passwordInput)
+          .then((userCredential) => {
+            showStatus('Login Guru berhasil! Mengalihkan...', 'success');
+            setTimeout(() => {
+              window.location.href = "https://riski902-alt.github.io/TOMBOL-PILIH-KELAS/"; 
+            }, 1000);
+          })
+          .catch((error) => {
+            showStatus('Login Gagal! Email atau password guru salah.', 'error');
+          });
+      }
+    });
+  }
+</script>
