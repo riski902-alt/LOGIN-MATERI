@@ -328,15 +328,29 @@
               querySnapshot.forEach((doc) => {
                 const data = doc.data();
                 
-                // MENCETAK DATA KE CONSOLE BROWSER UNTUK DEBUGGING
+                // MENCETAK DATA KE CONSOLE
                 console.log("Data yang ditarik dari database:", data);
 
-                // Mengambil nilai nama dengan format yang persis ada di database (dengan spasi)
-                const namaDariDatabase = data["Nama_Siswa "] || data.Nama_Siswa || data.nama_siswa || data.nama || "";
-
-                // Membandingkan input pengguna dengan data di database (mengabaikan huruf besar/kecil)
-                if (namaDariDatabase.trim().toLowerCase() === namaInput.toLowerCase()) {
-                  siswaCocok = true;
+                // --- LOGIKA CERDAS PENCARIAN NAMA ---
+                // Kita menelusuri setiap kolom (key) yang ada di dalam data siswa ini
+                for (let kolom in data) {
+                  // Bersihkan nama kolom: hilangkan spasi, garis bawah, dan ubah ke huruf kecil
+                  // Contoh: "Nama_Siswa " akan dibaca menjadi "namasiswa"
+                  let namaKolomBersih = kolom.trim().toLowerCase().replace(/_/g, "");
+                  
+                  // Jika nama kolom tersebut mengandung kata "nama"
+                  if (namaKolomBersih.includes("nama")) {
+                    // Ambil isi datanya (misalnya: "SULFAIDAH")
+                    let isiNamaDatabase = data[kolom];
+                    
+                    // Pastikan isinya adalah teks, lalu bandingkan dengan inputan Anda
+                    // .trim() digunakan untuk membuang spasi tidak sengaja di awal/akhir nama
+                    if (typeof isiNamaDatabase === "string" && 
+                        isiNamaDatabase.trim().toLowerCase() === namaInput.toLowerCase()) {
+                      siswaCocok = true;
+                      break; // Nama sudah cocok, hentikan pencarian
+                    }
+                  }
                 }
               });
 
