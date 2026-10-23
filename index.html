@@ -334,9 +334,9 @@
 
               if (siswaCocok) {
                 // SIMPAN SESI SISWA
-                sessionStorage.setItem("userRole", "siswa");
-                sessionStorage.setItem("userName", namaInput);
-                sessionStorage.setItem("userNISN", nisnInput);
+                localStorage.setItem("userRole", "siswa");
+                localStorage.setItem("userName", namaInput);
+                localStorage.setItem("userNISN", nisnInput);
 
                 showStatus('Login Siswa berhasil! Mengalihkan...', 'success');
                 setTimeout(() => {
