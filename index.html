@@ -363,20 +363,29 @@
             showStatus('Memeriksa akun Guru...', 'success');
 
             signInWithEmailAndPassword(auth, emailInput, passwordInput)
-              .then(() => {
-                // SIMPAN SESI GURU
-                sessionStorage.setItem("userRole", "guru");
-                sessionStorage.setItem("userEmail", emailInput);
+          .then(() => {
+            // SIMPAN SESI GURU MENGGUNAKAN LOCALSTORAGE
+            localStorage.setItem("userRole", "guru");
+            localStorage.setItem("userName", emailInput);
 
-                showStatus('Login Guru berhasil! Mengalihkan ke Dashboard...', 'success');
-                setTimeout(() => {
-                  // GURU DIARAHKAN KE DASHBOARD ADMIN
-                  window.location.href = "dashboard_admin.html"; 
-                }, 1000);
-              })
-              .catch(() => {
-                showStatus('Email atau password guru salah.', 'error');
-              });
+            showStatus('Login Guru berhasil! Mengalihkan ke Dashboard...', 'success');
+            
+            setTimeout(() => {
+              // Cek apakah guru diarahkan dari tombol materi tertentu
+              const urlParams = new URLSearchParams(window.location.search);
+              const redirectParam = urlParams.get('redirect');
+
+              // Arahkan menggunakan URL LENGKAP Github Pages Anda
+              if (redirectParam) {
+                  window.location.href = `https://riski902-alt.github.io/DASHBOARD-MATERI/index.html?id=${redirectParam}`;
+              } else {
+                  window.location.href = "https://riski902-alt.github.io/TOMBOL-PILIH-KELAS/index.html"; 
+              }
+            }, 1000);
+          })
+          .catch(() => {
+            showStatus('Email atau password guru salah.', 'error');
+          });
           }
         });
       }
