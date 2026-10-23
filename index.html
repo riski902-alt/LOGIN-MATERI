@@ -237,9 +237,6 @@
       import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
       import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-      // =========================================================================
-      // Konfigurasi Database Baru: DATABASEMATERIINFORMATIKA
-      // =========================================================================
       const firebaseConfig = {
         apiKey: "AIzaSyB7bt1JBOXkh81nYk8sVkuFpSmuJ3kOj94",
         authDomain: "databasemateriinformatika.firebaseapp.com",
@@ -249,7 +246,6 @@
         appId: "1:961327810612:web:48e952f20159a5b932e261",
         measurementId: "G-TDZQZ9L36B"
       };
-      // =========================================================================
 
       const app = initializeApp(firebaseConfig);
       const auth = getAuth(app);
@@ -276,7 +272,6 @@
         if (statusDiv) statusDiv.style.display = 'none';
       }
 
-      // Berpindah antar pilihan Siswa dan Guru
       roleInputs.forEach(input => {
         input.addEventListener('change', (e) => {
           hideStatus();
@@ -290,7 +285,6 @@
         });
       });
 
-      // Proses Tombol Login
       if (btnLogin) {
         btnLogin.addEventListener('click', async (event) => {
           event.preventDefault();
@@ -308,11 +302,9 @@
             showStatus('Memeriksa data siswa...', 'success');
 
             try {
-              // Mencari dokumen berdasarkan NISN sebagai String (Teks)
               let q = query(collection(db, "siswa"), where("NISN", "==", nisnInput));
               let querySnapshot = await getDocs(q);
 
-              // Jika kosong, coba cari berdasarkan NISN sebagai Number (Angka)
               if (querySnapshot.empty) {
                 const nisnAngka = Number(nisnInput);
                 q = query(collection(db, "siswa"), where("NISN", "==", nisnAngka));
@@ -327,34 +319,25 @@
               let siswaCocok = false;
               querySnapshot.forEach((doc) => {
                 const data = doc.data();
-                
-                // MENCETAK DATA KE CONSOLE
-                console.log("Data yang ditarik dari database:", data);
-
-                // --- LOGIKA CERDAS PENCARIAN NAMA ---
-                // Kita menelusuri setiap kolom (key) yang ada di dalam data siswa ini
                 for (let kolom in data) {
-                  // Bersihkan nama kolom: hilangkan spasi, garis bawah, dan ubah ke huruf kecil
-                  // Contoh: "Nama_Siswa " akan dibaca menjadi "namasiswa"
                   let namaKolomBersih = kolom.trim().toLowerCase().replace(/_/g, "");
-                  
-                  // Jika nama kolom tersebut mengandung kata "nama"
                   if (namaKolomBersih.includes("nama")) {
-                    // Ambil isi datanya (misalnya: "SULFAIDAH")
                     let isiNamaDatabase = data[kolom];
-                    
-                    // Pastikan isinya adalah teks, lalu bandingkan dengan inputan Anda
-                    // .trim() digunakan untuk membuang spasi tidak sengaja di awal/akhir nama
                     if (typeof isiNamaDatabase === "string" && 
                         isiNamaDatabase.trim().toLowerCase() === namaInput.toLowerCase()) {
                       siswaCocok = true;
-                      break; // Nama sudah cocok, hentikan pencarian
+                      break;
                     }
                   }
                 }
               });
 
               if (siswaCocok) {
+                // SIMPAN SESI SISWA
+                sessionStorage.setItem("userRole", "siswa");
+                sessionStorage.setItem("userName", namaInput);
+                sessionStorage.setItem("userNISN", nisnInput);
+
                 showStatus('Login Siswa berhasil! Mengalihkan...', 'success');
                 setTimeout(() => {
                   window.location.href = "https://riski902-alt.github.io/TOMBOL-PILIH-KELAS/"; 
@@ -381,9 +364,14 @@
 
             signInWithEmailAndPassword(auth, emailInput, passwordInput)
               .then(() => {
-                showStatus('Login Guru berhasil! Mengalihkan...', 'success');
+                // SIMPAN SESI GURU
+                sessionStorage.setItem("userRole", "guru");
+                sessionStorage.setItem("userEmail", emailInput);
+
+                showStatus('Login Guru berhasil! Mengalihkan ke Dashboard...', 'success');
                 setTimeout(() => {
-                  window.location.href = "https://riski902-alt.github.io/TOMBOL-PILIH-KELAS/"; 
+                  // GURU DIARAHKAN KE DASHBOARD ADMIN
+                  window.location.href = "dashboard_admin.html"; 
                 }, 1000);
               })
               .catch(() => {
